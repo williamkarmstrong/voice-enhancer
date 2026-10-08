@@ -18,8 +18,9 @@ def plot_time_vs_fft(x, filename):
     fig.savefig("./plots/" + filename)
 
 
-fs, x = import_wav_audio(CLOSE_AUDIO)
-plot_time_vs_fft(x, "close_audio")
+if __name__ == "__main__":
+    fs, x = import_wav_audio(CLOSE_AUDIO)
+    plot_time_vs_fft(x, "close_audio")
 
-fs, x = import_wav_audio(FAR_AUDIO)
-plot_time_vs_fft(x, "far_audio")
+    fs, x = import_wav_audio(FAR_AUDIO)
+    plot_time_vs_fft(x, "far_audio")
