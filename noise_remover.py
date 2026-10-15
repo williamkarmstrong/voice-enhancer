@@ -1,5 +1,7 @@
 import numpy as np 
-from loader import smooth_step
+
+def smooth_step(f, f1, width):
+    return 1 / (1 + np.exp(-(f - f1) / width))
 
 
 def noise_gains(mags, f, strength):

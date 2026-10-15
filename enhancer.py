@@ -1,6 +1,8 @@
 import numpy as np
 from scipy.ndimage import median_filter, minimum_filter1d
-from loader import smooth_step, bell
+
+def bell(f, center, width):
+    return np.exp(-((f - center) **2) / (2 * width **2))
 
 
 def band(mags, f, low, high):
