@@ -43,20 +43,28 @@ def plot_time_vs_fft(x, fs, filename):
     ax[0].set_xlabel("Time (s)")
     ax[0].set_ylabel("Normalised amplitude")
 
-    # Frequency domain: dB vs log frequency, 20 Hz (lowest audible) to Nyquist
-    ax[1].semilogx(F, xf_db, linewidth=0.5)
-    ax[1].set_xlabel("Frequency (Hz)")
-    ax[1].set_ylabel("Amplitude (dB)")
-    ax[1].set_xlim(20, fs / 2)
+def smooth_step(f, f1, width):
+    return 1 / (1 + np.exp(-(f - f1) / width))
 
-    fig.tight_layout()
-    fig.savefig("./plots/" + filename + ".pdf")
+def bell(f, center, width):
+    return np.exp(-((f - center) **2) / (2 * width **2))
 
-
-"""
-Loads both recordings, plots each one,
-then displays all plots on screen.
-"""
+def process_frames(x, fs, gain_rule, frame_size=1024 ):
+    
+    hop = frame_size //2
+    window = np.sqrt(np.hanning(frame_size + 1)[:-1])
+    padded = np.concatenate([np.zeros(hop), x, np.zeros(frame_size)])
+    starts = range(0, len(padded) - frame_size, hop)
+    
+    spectrogram = np.array([np.fft.rfft(padded[i:i+frame_size] * window) for i in starts])
+    f = np.fft.rfftfreq(frame_size, 1/fs)
+    spectrogram = spectrogram * gain_rule(np.abs(spectrogram), f)
+    
+    y = np.zeros_like(padded)
+    for i, F in zip(starts, spectrogram):
+        y[i:i+frame_size] += np.fft.irfft(F) * window
+    return y[hop:hop + len(x)]
+    
 if __name__ == "__main__":
     fs, x = import_wav_audio(CLOSE_AUDIO)
     plot_time_vs_fft(x, fs, "close_audio")
