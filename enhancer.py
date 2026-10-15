@@ -9,9 +9,10 @@ def enhance(x, fs, bands):
         idx_low = int((low * N) / fs)
         idx_high = int((high * N) / fs)
         X[idx_low:idx_high] *= gain
-        if idx_low > 0:
-            X[-idx_high:-idx_low] *= gain
-        elif idx_low == 0 and idx_high > 0:
-            X[-idx_high+1:] *= gain
+        if idx_low == 0:
+            if idx_high > 1:
+                X[-idx_high + 1:] *= gain
+        else:
+            X[-idx_high + 1 : -idx_low + 1] *= gain
             
     return np.fft.ifft(X).real

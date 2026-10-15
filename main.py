@@ -6,11 +6,22 @@ from enhancer import enhance
 
 RECORDINGS = {
     "close": dict(file="audio1_close.wav", strength=1.0, close_mic=True, end=7.9,
-                  bands=[(0, 90, 0), (200, 300, 0.75), (2000, 4000, 1.25), (13000, 22050, 0.1)]),
+                  bands=[
+                      (0, 80, 0),         
+                      (80, 150, 0.7),     
+                      (150, 300, 1.15),    
+                      (2500, 5000, 1.25),  
+                      (8000, 22050, 0)     
+                  ]),
     "far":   dict(file="audio2_far.wav", strength=2.0, close_mic=False, end=None,
-                  bands=[(0, 80, 0), (100, 250, 1.8), (2500, 4500, 1.8), (13000, 22050, 0.1)]),
+                  bands=[
+                      (0, 120, 0),        
+                      (150, 300, 1.3),     
+                      (400, 800, 0.8),  
+                      (2500, 5500, 1.15),  
+                      (6500, 22050, 0)     
+                  ]),
 }
-
 
 if __name__ == "__main__":
     for name, r in RECORDINGS.items():
