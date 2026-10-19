@@ -1,9 +1,16 @@
+import os
 import numpy as np
 from scipy.io import wavfile
 import matplotlib.pyplot as plt
 
-CLOSE_AUDIO = "./audio/audio1_close.wav"
-FAR_AUDIO = "./audio/audio2_far.wav"
+# Paths are relative to this file so it runs from any working directory
+HERE = os.path.dirname(os.path.abspath(__file__))
+PLOTS = os.path.join(HERE, "plots")
+
+# Set True to write the report's SVGs to plots
+SAVE_PLOTS = False
+CLOSE_AUDIO = os.path.join(HERE, "original_speech_5cm.wav")
+FAR_AUDIO = os.path.join(HERE, "original_speech_1m.wav")
 
 # Held vowels found by listening: (word, start s, end s, f0 Hz)
 CLOSE_VOWELS = [("welcome", 0.61, 0.71, 108), ("four", 2.55, 2.70, 83),
@@ -14,13 +21,20 @@ FAR_VOWELS = [("welcome", 1.19, 1.29, 95), ("four", 3.25, 3.40, 87),
               ("transforms", 7.56, 7.68, 79)]
 
 
+# Writes a figure to plots/ as an SVG
+def save_svg(fig, filename):
+    if SAVE_PLOTS:
+        os.makedirs(PLOTS, exist_ok=True)
+        fig.savefig(os.path.join(PLOTS, filename + ".svg"))
+
+
 # (min, max) f0 of a recording's vowels
 def f0_band(vowels):
     f0s = [f0 for _, _, _, f0 in vowels]
     return min(f0s), max(f0s)
 
 
-# Loads a 16-bit .wav scaled to -1 to 1, averaging stereo to mono.
+# Loads a 16-bit .wav scaled to -1 to 1, averaging stereo to mono
 def import_wav_audio(filename):
     fs, x = wavfile.read(filename)
     x = x / 32768
@@ -29,13 +43,13 @@ def import_wav_audio(filename):
     return fs, x
 
 
-# Saves the time signal and its spectrum (dB vs log Hz) as an SVG,
+# Plots the time signal and its spectrum (dB vs log Hz)
 # marking the f0, harmonic, consonant and noise bands ((low, high) Hz).
 def plot_time_vs_fft(x, fs, filename, f0_band, consonants, noise):
     N = len(x)
     t = np.arange(N) / fs
 
-    # Positive-frequency bins and their frequencies in Hz
+    # Positive frequency bins and their frequencies in Hz
     k = np.arange(1, N // 2)
     F = k * fs / N
     xf = np.fft.fft(x)
@@ -59,7 +73,7 @@ def plot_time_vs_fft(x, fs, filename, f0_band, consonants, noise):
     ax[1].set_xlim(20, fs / 2)
     ax[1].grid(which="both", alpha=0.3)
 
-    # Harmonic band n spans n*low to n*high; stop before it overlaps band n-1
+    # Harmonic band n spans n*low to n*high
     low, high = f0_band
     ax[1].axvspan(low, high, color="tab:green", alpha=0.3,
                   label=f"Vowel $f_0$ ({low}–{high} Hz)")
@@ -72,11 +86,10 @@ def plot_time_vs_fft(x, fs, filename, f0_band, consonants, noise):
     ax[1].legend(loc="lower left", fontsize=8)
 
     fig.tight_layout()
-    fig.savefig("./plots/" + filename + ".svg")
+    save_svg(fig, filename)
 
 
-# Draws the spectrum of one vowel slice (start to end s) up to 1 kHz,
-# where the harmonics are easiest to read, with f0 and n*f0 marked.
+# Draws the spectrum of one vowel slice with f0 and n*f0 marked
 def draw_segment_fft(ax, x, fs, start, end, f0):
     segment = x[int(start * fs):int(end * fs)]
     N = len(segment)
@@ -100,16 +113,16 @@ def draw_segment_fft(ax, x, fs, start, end, f0):
     ax.legend(fontsize=8)
 
 
-# Saves one vowel spectrum as an SVG for the report without showing it.
+# Saves one vowel spectrum as an SVG
 def plot_segment_fft(x, fs, start, end, filename, f0):
     fig, ax = plt.subplots(figsize=(6.3, 2.5))
     draw_segment_fft(ax, x, fs, start, end, f0)
     fig.tight_layout()
-    fig.savefig("./plots/" + filename + ".svg")
+    save_svg(fig, filename)
     plt.close(fig)
 
 
-# Shows every vowel of a recording in one titled figure, one panel per word.
+# Shows every vowel of a recording in one titled figure
 def plot_vowel_grid(x, fs, vowels, label, filename):
     fig, axes = plt.subplots(len(vowels), 1, figsize=(6.3, 10), sharex=True)
     fig.canvas.manager.set_window_title(f"{label} – vowel spectra")
@@ -120,22 +133,24 @@ def plot_vowel_grid(x, fs, vowels, label, filename):
         ax.label_outer()
 
     fig.tight_layout()
-    fig.savefig("./plots/" + filename + ".svg")
+    save_svg(fig, filename)
 
 
 if __name__ == "__main__":
     fs, x = import_wav_audio(CLOSE_AUDIO)
     plot_time_vs_fft(x, fs, "close_audio", f0_band(CLOSE_VOWELS), (3000, 20000), (20, 70))
     plt.gcf().canvas.manager.set_window_title("Close mic – time signal and spectrum")
-    for word, start, end, f0 in CLOSE_VOWELS:
-        plot_segment_fft(x, fs, start, end, "close_" + word, f0)
+    if SAVE_PLOTS:
+        for word, start, end, f0 in CLOSE_VOWELS:
+            plot_segment_fft(x, fs, start, end, "close_" + word, f0)
     plot_vowel_grid(x, fs, CLOSE_VOWELS, "Close mic", "close_vowels")
 
     fs, x = import_wav_audio(FAR_AUDIO)
     plot_time_vs_fft(x, fs, "far_audio", f0_band(FAR_VOWELS), (3000, 20000), (20, 70))
     plt.gcf().canvas.manager.set_window_title("Far mic – time signal and spectrum")
-    for word, start, end, f0 in FAR_VOWELS:
-        plot_segment_fft(x, fs, start, end, "far_" + word, f0)
+    if SAVE_PLOTS:
+        for word, start, end, f0 in FAR_VOWELS:
+            plot_segment_fft(x, fs, start, end, "far_" + word, f0)
     plot_vowel_grid(x, fs, FAR_VOWELS, "Far mic", "far_vowels")
 
     plt.show()
