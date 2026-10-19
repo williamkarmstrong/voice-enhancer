@@ -8,7 +8,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 PLOTS = os.path.join(HERE, "plots")
 
 # Set True to write the report's SVGs to plots
-SAVE_PLOTS = False
+SAVE_PLOTS = True
 CLOSE_AUDIO = os.path.join(HERE, "original_speech_5cm.wav")
 FAR_AUDIO = os.path.join(HERE, "original_speech_1m.wav")
 
@@ -26,6 +26,15 @@ def save_svg(fig, filename):
     if SAVE_PLOTS:
         os.makedirs(PLOTS, exist_ok=True)
         fig.savefig(os.path.join(PLOTS, filename + ".svg"))
+
+
+# Positive-frequency bins in Hz and their amplitudes in dB
+def spectrum_db(x, fs):
+    N = len(x)
+    k = np.arange(1, N // 2)
+    F = k * fs / N
+    # Divide by N so the level doesn't depend on recording length
+    return F, 20 * np.log10(np.abs(np.fft.fft(x)[k]) / N)
 
 
 # (min, max) f0 of a recording's vowels
@@ -49,13 +58,7 @@ def plot_time_vs_fft(x, fs, filename, f0_band, consonants, noise):
     N = len(x)
     t = np.arange(N) / fs
 
-    # Positive frequency bins and their frequencies in Hz
-    k = np.arange(1, N // 2)
-    F = k * fs / N
-    xf = np.fft.fft(x)
-    
-    # Divide by N so the level doesn't depend on recording length
-    xf_db = 20 * np.log10(np.abs(xf[k]) / N)
+    F, xf_db = spectrum_db(x, fs)
 
     # Fits the report's text width
     fig, ax = plt.subplots(2, 1, figsize=(6.3, 4))
