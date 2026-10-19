@@ -44,7 +44,7 @@ def plot_time_vs_fft(x, fs, filename, f0_band, consonants, noise):
     xf_db = 20 * np.log10(np.abs(xf[k]) / N)
 
     # Fits the report's text width
-    fig, ax = plt.subplots(2, 1, figsize=(6.3, 5))
+    fig, ax = plt.subplots(2, 1, figsize=(6.3, 4))
 
     ax[0].plot(t, x, linewidth=0.5)
     ax[0].set_xlabel("Time (s)")
@@ -87,7 +87,7 @@ def plot_segment_fft(x, fs, start, end, filename, f0):
     F = k * fs / N
     segment_db = 20 * np.log10(np.abs(np.fft.fft(segment * window)[k]) / N)
 
-    fig, ax = plt.subplots(figsize=(6.3, 3))
+    fig, ax = plt.subplots(figsize=(6.3, 2.5))
     ax.plot(F, segment_db, linewidth=0.8, label="Spectrum")
     ax.axvline(f0, color="black", linestyle="--", linewidth=0.8,
                label=f"$f_0$ ≈ {f0} Hz")
