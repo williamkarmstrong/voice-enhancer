@@ -45,8 +45,17 @@ def enhance(x, fs, bands):
     return np.fft.ifft(X).real
 
 
+# Turns down the bins below cutoff Hz in each pop
+def depop(x, fs, pops, cutoff=800, gain=0.1):
+    for start, end in pops:
+        a, b = int(start * fs), int(end * fs)
+        x[a:b] = enhance(x[a:b], fs, [(0, cutoff, gain)])
+    return x
+
+
 RECORDINGS = {
     "close": dict(file=CLOSE_AUDIO, out="enhanced_speech_5cm.wav", strength=1.0, close_mic=True, end=7.9,
+                  pops=[(1.82, 1.94), (3.32, 3.42)],
                   bands=[
                       (0, 80, 0),         
                       (80, 150, 0.7),     
@@ -55,6 +64,7 @@ RECORDINGS = {
                       (8000, 22050, 0)     
                   ]),
     "far":   dict(file=FAR_AUDIO, out="enhanced_speech_1m.wav", strength=2.0, close_mic=False, end=None,
+                  pops=[],
                   bands=[
                       (0, 120, 0),        
                       (150, 300, 1.3),     
@@ -68,9 +78,12 @@ RECORDINGS = {
 if __name__ == "__main__":
     for r in RECORDINGS.values():
         fs, x = import_wav_audio(r["file"])
-        y = remove_noise(x - x.mean(), fs, r["strength"], close_mic=r["close_mic"])
+        x = depop(x - x.mean(), fs, r["pops"])
+        y = remove_noise(x, fs, r["strength"], close_mic=r["close_mic"])
         y = enhance(y, fs, r["bands"])
         if r["end"]:
             y[int(r["end"] * fs):] = 0
-        y = np.clip(y / np.std(y) * 0.08, -0.9, 0.9)
+        y = y / np.std(y) * 0.08
+        # Turn the whole recording down if a peak would pass 0.9
+        y = y * min(1, 0.9 / np.max(np.abs(y)))
         wavfile.write(os.path.join(HERE, r["out"]), fs, (y * 32767).astype(np.int16))
