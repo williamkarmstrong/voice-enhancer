@@ -1,8 +1,8 @@
 import numpy as np
 from scipy.io import wavfile
-from loader import import_wav_audio, CLOSE_AUDIO, FAR_AUDIO
+from audioplot import import_wav_audio, CLOSE_AUDIO, FAR_AUDIO
 from noise_remover import remove_noise
-from enhancer import enhance
+from audioenhancer import enhance
 
 RECORDINGS = {
     "close": dict(file="audio1_close.wav", strength=1.0, close_mic=True, end=7.9,
