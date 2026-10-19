@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 PLOTS = os.path.join(HERE, "plots")
-SAVE_PLOTS = True
+SAVE_PLOTS = False
 CLOSE_AUDIO = os.path.join(HERE, "original_speech_5cm.wav")
 FAR_AUDIO = os.path.join(HERE, "original_speech_1m.wav")
 CONSONANTS_HZ = (3000, 20000)
